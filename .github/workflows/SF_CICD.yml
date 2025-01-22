@@ -3,7 +3,7 @@ name: Deploy Snowflake Code
 on:
   push:
     branches:
-      - main   # or another branch
+      - main
     paths:
       - 'migrations/**'
 
@@ -32,16 +32,14 @@ jobs:
         echo "SF_ACCOUNT: ${{ secrets.SF_ACCOUNT }}" >> $GITHUB_ENV
         echo "SF_WAREHOUSE: ${{ secrets.SF_WAREHOUSE }}" >> $GITHUB_ENV
         echo "SF_DATABASE: ${{ secrets.SF_DATABASE }}" >> $GITHUB_ENV
-        
 
-run: |
-          echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
-          python --version
-          echo "Step 1: Installing schemachange"
-          pip install schemachange
+        echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
+        python --version
+        echo "Step 1: Installing schemachange"
+        pip install schemachange
           
-          echo "Step 2: Running schemachange"
-          schemachange -f $GITHUB_WORKSPACE/migrations -a $SF_ACCOUNT -u $SF_USERNAME -r $SF_ROLE -w $SF_WAREHOUSE -d $SF_DATABASE -c $SF_DATABASE.SCHEMACHANGE.CHANGE_HISTORY --create-change-history-table
+        echo "Step 2: Running schemachange"
+        schemachange -f $GITHUB_WORKSPACE/migrations -a $SF_ACCOUNT -u $SF_USERNAME -r $SF_ROLE -w $SF_WAREHOUSE -d $SF_DATABASE -c $SF_DATABASE.SCHEMACHANGE.CHANGE_HISTORY --create-change-history-table
 
           
         
