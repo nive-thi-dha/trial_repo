@@ -43,7 +43,3 @@ jobs:
           echo "Step 2: Running schemachange"
           schemachange -f $GITHUB_WORKSPACE/migrations --connections-file-path $GITHUB_WORKSPACE/migrations/connections.toml --connection-name cicd -c $SF_DATABASE.SCHEMACHANGE.CHANGE_HISTORY --create-change-history-table
 
-          - name: Fail the workflow if validation or application fails
-        if: ${{ failure() }}
-          echo "Schema validation or application failed, rolling back the workflow..."
-          exit 1  # Force the workflow to stop if there was any failure
