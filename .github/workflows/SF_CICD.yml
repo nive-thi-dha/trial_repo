@@ -25,6 +25,11 @@ jobs:
         with:
           python-version: 3.8.x
           
+      - name: Install schemachange
+        run: |
+          echo "Installing schemachange"
+          pip install schemachange
+          
       - name: Run schemachange
         env:
           SF_ACCOUNT: ${{ secrets.SF_ACCOUNT }}
@@ -32,14 +37,14 @@ jobs:
           SF_ROLE: ${{ secrets.SF_ROLE }}
           SF_WAREHOUSE: ${{ secrets.SF_WAREHOUSE }}
           SF_DATABASE: ${{ secrets.SF_DATABASE }}
-          SNOWFLAKE_PASSWORD: 'Snowflake@2025'
-          
+          SNOWFLAKE_PASSWORD: ${{ secrets.SF_PASSWORD }}
         run: |
-          echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
-          python --version
-          echo "Step 1: Installing schemachange"
-          pip install schemachange
-  
-          echo "Step 2: Running schemachange"
+          echo "Running schemachange"
           schemachange -f $GITHUB_WORKSPACE/migrations --connections-file-path $GITHUB_WORKSPACE/migrations/connections.toml --connection-name cicd -c $SF_DATABASE.SCHEMACHANGE.CHANGE_HISTORY --create-change-history-table
+        continue-on-error: false  # This ensures that if this step fails, the entire job will fail.
 
+      - name: Rollback and stop further deployment if any failure occurs
+        if: ${{ failure() }}  # This ensures this step only runs when any of the previous steps fail.
+        run: |
+          echo "Schema change deployment failed, rolling back the workflow!"
+          exit 1  # This forces the workflow to stop immediately if there's a failure.
