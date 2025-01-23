@@ -1,0 +1,7 @@
+[cicd]
+account = "dj65498.central-india.azure"
+user = "nivethidhas"
+password = "Snowflake@2025"
+warehouse = "COMPUTE_WH"
+database = "DB"
+schema = "SCH"
