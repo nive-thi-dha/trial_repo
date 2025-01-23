@@ -40,12 +40,12 @@ jobs:
           echo "Step 1: Installing schemachange"
           pip install schemachange
 
-           - name: Validate and apply schema changes
-          # Validate schema changes before applying
-          schemachange -v validate
+           - name: Validate schema changes
+           run: |
+             schemachange -v validate
           
-          # Apply schema changes to Snowflake
-          schemachange -v apply
+           # Apply schema changes to Snowflake
+             schemachange -v apply
 
       - name: Fail the workflow if validation or application fails
         if: ${{ failure() }}
