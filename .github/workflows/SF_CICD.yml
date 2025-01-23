@@ -39,6 +39,20 @@ jobs:
           python --version
           echo "Step 1: Installing schemachange"
           pip install schemachange
+
+           - name: Validate and apply schema changes
+        run: |
+          # Validate schema changes before applying
+          schemachange -v validate
+          
+          # Apply schema changes to Snowflake
+          schemachange -v apply
+
+      - name: Fail the workflow if validation or application fails
+        if: ${{ failure() }}
+        run: |
+          echo "Schema validation or application failed, rolling back the workflow..."
+          exit 1  # Force the workflow to stop if there was any failure
           
           echo "Step 2: Running schemachange"
           schemachange -f $GITHUB_WORKSPACE/migrations --connections-file-path $GITHUB_WORKSPACE/migrations/connections.toml --connection-name cicd -c $SF_DATABASE.SCHEMACHANGE.CHANGE_HISTORY --create-change-history-table
