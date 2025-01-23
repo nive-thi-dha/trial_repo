@@ -41,4 +41,4 @@ jobs:
           pip install schemachange
           
           echo "Step 2: Running schemachange"
-          schemachange -f https://github.com/nive-thi-dha/trial_repo/tree/main/migrations -a dj65498.central-india.azure -u nivethidhas -r ACCOUNTADMIN -w $COMPUTE_WH -d DB -c $DB.SCHEMACHANGE.CHANGE_HISTORY --create-change-history-table
+          schemachange -f $GITHUB_WORKSPACE/migrations --connections-file-path $GITHUB_WORKSPACE/migrations/connections.toml --connection-name cicd -c $SF_DATABASE.SCHEMACHANGE.CHANGE_HISTORY --create-change-history-table
