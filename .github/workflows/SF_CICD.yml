@@ -49,6 +49,5 @@ jobs:
              schemachange -v apply
           - name: Fail the workflow if validation or application fails
         if: ${{ failure() }}
-        run: |
           echo "Schema validation or application failed, rolling back the workflow..."
           exit 1  # Force the workflow to stop if there was any failure
