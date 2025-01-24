@@ -29,6 +29,17 @@ jobs:
         run: |
           echo "Installing schemachange"
           pip install schemachange
+          pip install snowflake-connector-python
+          
+      - name: Validate schema changes
+        run: |
+          schemachange validate -v
+          
+      - name: Rollback and stop further deployment if any failure occurs
+        if: ${{ failure() }}  # This ensures this step only runs when any of the previous steps fail.
+        run: |
+          echo "Schema change deployment failed, rolling back the workflow!"
+          exit 1  # This forces the workflow to stop immediately if there's a failure.
           
       - name: Run schemachange
         env:
@@ -41,10 +52,6 @@ jobs:
         run: |
           echo "Running schemachange"
           schemachange -f $GITHUB_WORKSPACE/migrations --connections-file-path $GITHUB_WORKSPACE/migrations/connections.toml --connection-name cicd -c $SF_DATABASE.SCHEMACHANGE.CHANGE_HISTORY --create-change-history-table
-        continue-on-error: false  # This ensures that if this step fails, the entire job will fail.
+        
 
-      - name: Rollback and stop further deployment if any failure occurs
-        if: ${{ failure() }}  # This ensures this step only runs when any of the previous steps fail.
-        run: |
-          echo "Schema change deployment failed, rolling back the workflow!"
-          exit 1  # This forces the workflow to stop immediately if there's a failure.
+      
