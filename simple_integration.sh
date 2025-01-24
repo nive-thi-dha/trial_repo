@@ -14,4 +14,5 @@ run_workflow () {
 }
 
 ## running workflow
-run_workflow
+## run_workflow
+ echo "TEST"
