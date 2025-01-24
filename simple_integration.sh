@@ -9,7 +9,7 @@ export -f print_log
 
 run_workflow () {
     print_log "INFO" "Running workflow"
-        print_log "INFO" "Running: $sql_file_name"
+        print_log "INFO" "Running: workflow"
         ~/snowflake/snowsql -a $SF_ACCOUNT -u $SF_USERNAME -r $SF_ROLE -w $SF_WAREHOUSE -d $SF_DATABASE --private-key-path $SNOWFLAKE_PRIVATE_KEY -q "create database DB_BKP clone DB"
 }
 
