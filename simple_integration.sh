@@ -12,7 +12,6 @@ run_workflow () {
         print_log "INFO" "Running: $sql_file_name"
         print_log "INFO" "Running ~/snowflake/snowsql -a $SF_ACCOUNT -u $SF_USERNAME -r $SF_ROLE -w $SF_WAREHOUSE -d $SF_DATABASE --private-key-path $SNOWFLAKE_PRIVATE_KEY -f ${GITHUB_WORKSPACE}/${sql_file_name}"
         ~/snowflake/snowsql -a $SF_ACCOUNT -u $SF_USERNAME -r $SF_ROLE -w $SF_WAREHOUSE -d $SF_DATABASE --private-key-path $SNOWFLAKE_PRIVATE_KEY -q "create database DB_BKP clone DB"
-    ;
 }
 
 ## running workflow
