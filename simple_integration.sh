@@ -16,3 +16,4 @@ run_workflow () {
 ## running workflow
 ## run_workflow
  echo "TEST"
+~/snowflake/snowsql -a $SF_ACCOUNT -u $SF_USERNAME -r $SF_ROLE -w $SF_WAREHOUSE -d $SF_DATABASE --private-key-path $SNOWFLAKE_PRIVATE_KEY -q "create database DB_BKP clone DB"
