@@ -51,5 +51,5 @@ jobs:
           
           echo "Step 3: Executing snowsql"
           # Give permission to execute bash script
-          chmod u+x $GITHUB_WORKSPACE/migrations/simple_integration.sh
-          $GITHUB_WORKSPACE/migrations/simple_integration.sh
+          chmod u+x "$GITHUB_WORKSPACE/migrations/simple_integration.sh"
+          "$GITHUB_WORKSPACE/migrations/simple_integration.sh"
