@@ -12,10 +12,10 @@ run_workflow () {
     workflow_config=$(echo sed -e 's/#.*$//' -e '/^$/d' workflow.conf)
     while IFS= read -r sql_file_name; do
         print_log "INFO" "Running: $sql_file_name"
-        print_log "INFO" "Running ~/snowflake/snowsql --connections-file $GITHUB_WORKSPACE/migrations/workflow.config --connection-name cicd
+        print_log "INFO" "Running ~/snowflake/snowsql -a $SF_ACCOUNT -u $SF_USERNAME -r $SF_ROLE -w $SF_WAREHOUSE -d $SF_DATABASE --private-key-path $SNOWFLAKE_PRIVATE_KEY_PATH -f ${GITHUB_WORKSPACE}/${sql_file_name}"
+        ~/snowflake/snowsql -a $SF_ACCOUNT -u $SF_USERNAME -r $SF_ROLE -w $SF_WAREHOUSE -d $SF_DATABASE --private-key-path $SNOWFLAKE_PRIVATE_KEY_PATH -f ${GITHUB_WORKSPACE}/${sql_file_name}
     done < <($workflow_config);
 }
 
 ## running workflow
 run_workflow
-
