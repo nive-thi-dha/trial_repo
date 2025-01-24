@@ -12,7 +12,7 @@ run_workflow () {
     workflow_config=$(echo sed -e 's/#.*$//' -e '/^$/d' workflow.conf)
     while IFS= read -r sql_file_name; do
         print_log "INFO" "Running: $sql_file_name"
-        print_log "INFO" "Running ~/snowflake/snowsql -f $GITHUB_WORKSPACE/migrations --connections-file-path $GITHUB_WORKSPACE/migrations/connections.toml --connection-name cicd
+        print_log "INFO" "Running ~/snowflake/snowsql --connections-file $GITHUB_WORKSPACE/migrations/workflow.config --connection-name cicd
     done < <($workflow_config);
 }
 
