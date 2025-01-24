@@ -32,6 +32,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      # Copying our private key under ~/.ssh/
+      - name: Install SSH Key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SF_PRIVATE_KEY }}
+          name: id_rsa-snowflake
+          known_hosts: 'just-a-placeholder-so-we-dont-get-errors'
+
       - name: Use Python 3.8.x
         uses: actions/setup-python@v2.2.1
         with:
@@ -48,8 +56,9 @@ jobs:
     
       - name: Execute sql files against Snowflake
         run: |
-          
+          echo "Creating SNOWFLAKE_PRIVATE_KEY_PATH variable"
+          export SNOWFLAKE_PRIVATE_KEY_PATH=~/.ssh/id_rsa-snowflake
           echo "Step 3: Executing snowsql"
           # Give permission to execute bash script
-          chmod u+x "$GITHUB_WORKSPACE/migrations/simple_integration.sh"
-          "$GITHUB_WORKSPACE/migrations/simple_integration.sh"
+          chmod u+x $GITHUB_WORKSPACE/simple_integration.sh
+          $GITHUB_WORKSPACE/simple_integration.sh
