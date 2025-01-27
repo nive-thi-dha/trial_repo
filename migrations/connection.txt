@@ -1,0 +1,4 @@
+[connections.cicd]
+accountname = dj65498.central-india.azure
+username = nivethidhas
+password = Snowflake@2025
