@@ -64,7 +64,7 @@ jobs:
         SF_DATABASE: "DB"
         SF_ROLE: "ACCOUNTADMIN"
       run: |
-       schemachange -f $GITHUB_WORKSPACE/ANALYTICS_WAREHOUSE --connections-file-path $GITHUB_WORKSPACE/migrations/connections.toml --connection-name cicd -c $SF_DATABASE.SCHEMACHANGE.CHANGE_HISTORY --create-change-history-table
+       schemachange -f $GITHUB_WORKSPACE/ANALYTICS_DB --connections-file-path $GITHUB_WORKSPACE/migrations/connections.toml --connection-name cicd -c $SF_DATABASE.SCHEMACHANGE.CHANGE_HISTORY --create-change-history-table
  
     - name: Rollback on Failure
       if: failure()
