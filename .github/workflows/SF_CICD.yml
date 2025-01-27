@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  schema-change:
+  deploy-snowflake-changes-job:
     runs-on: ubuntu-latest
  
     steps:
