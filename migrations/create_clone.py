@@ -32,21 +32,28 @@ def restore_snowflake_db(backup_db, target_db, user, password, account, warehous
         timestamp_command = f"select current_timestamp();"
 		
 		# SQL command to create a clone of the backup database
-        clone_command = f"CREATE DATABASE {target_db} CLONE {backup_db};"
+        clone_command = f"CREATE DATABASE DB_BKP CLONE DB;"
 		
 		# SQL command to create a table named secondtable
         sql_command = f"USE SCHEMA DEMO;"
-	table_command= f"CREATE TABLE SECONDTABLE(NAME VARCHAR , AGE NUMBER );"
+	create_table_sql = """
+        CREATE OR REPLACE TABLE my_table (
+            id INT,
+            name STRING,
+            created_at TIMESTAMP
+        );
+        """
         except Exception as e:
-        print(f"Error during restore: {e}")
+        print(f"Error during deployment: {e}")
         sys.restore_command()
 		
         # SQL command to restore the database from cloned database in case of any failure
-        restore_command = f"CREATE DATABASE {target_db} CLONE {backup_db} AT (TIMESTAMP => {timestamp_command});"
+	drop_command= f"DROP DATABASE DB;"
+        restore_command = f"CREATE DATABASE DB CLONE DB_BKP AT (TIMESTAMP => {timestamp_command});"
 
         # Execute the clone command to restore the database
         cursor.execute(clone_command)
-        print(f"Database {target_db} successfully restored from {backup_db}.")
+        print(f"Database DB successfully restored from DB_BKP.")
 
     
     finally:
