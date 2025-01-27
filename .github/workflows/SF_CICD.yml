@@ -1,20 +1,15 @@
 name: snowflake-devops-demo
 
-# Controls when the action will run. 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - 'migrations/**'
-
-  # Allows you to run this workflow manually from the Actions tab
+    branches: [ main ]
   workflow_dispatch:
-
+ 
+ 
 jobs:
-  deploy-snowflake-changes-job:
+  schema-change:
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v3
  
