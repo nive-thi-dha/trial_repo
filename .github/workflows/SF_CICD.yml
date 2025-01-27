@@ -1,15 +1,20 @@
 name: snowflake-devops-demo
 
+# Controls when the action will run. 
 on:
   push:
-    branches: [ main ]
-  workflow_dispatch:
- 
- 
-jobs:
-  schema-change:
-    runs-on: ubuntu-latest
+    branches:
+      - main
+    paths:
+      - 'migrations/**'
 
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  deploy-snowflake-changes-job:
+    runs-on: ubuntu-latest
+    
     steps:
     - uses: actions/checkout@v3
  
@@ -57,32 +62,32 @@ jobs:
  
     - name: Apply Schema Changes
       env:
-        SF_ACCOUNT: ${{ secrets.SF_ACCOUNT }}
-        SF_USERNAME: ${{ secrets.SF_USERNAME }}
-        SF_PASSWORD: ${{ secrets.SF_PASSWORD }}
-        SF_WAREHOUSE: ${{ secrets.SF_WAREHOUSE }}
-        SF_DATABASE: ${{ secrets.SF_DATABASE }}
-        SF_ROLE: ${{ secrets.SF_ROLE }}
+        SF_ACCOUNT: "dj65498.central-india.azure"
+        SF_USERNAME: "nivethidhas"
+        SF_PASSWORD: "Snowflake@2025"
+        SF_WAREHOUSE: "COMPUTE_WH"
+        SF_DATABASE: "DB"
+        SF_ROLE: "ACCOUNTADMIN"
       run: |
        schemachange -f $GITHUB_WORKSPACE/migrations --connections-file-path $GITHUB_WORKSPACE/migrations/connections.toml --connection-name cicd -c $SF_DATABASE.SCHEMACHANGE.CHANGE_HISTORY --create-change-history-table
  
     - name: Rollback on Failure
       if: failure()
       env:
-        SF_ACCOUNT: ${{ secrets.SF_ACCOUNT }}
-        SF_USERNAME: ${{ secrets.SF_USERNAME }}
-        SF_PASSWORD: ${{ secrets.SF_PASSWORD }}
-        SF_WAREHOUSE: ${{ secrets.SF_WAREHOUSE }}
-        SF_DATABASE: ${{ secrets.SF_DATABASE }}
+        SF_ACCOUNT: "dj65498.central-india.azure"
+        SF_USERNAME: "nivethidhas"
+        SF_PASSWORD: "Snowflake@2025"
+        SF_WAREHOUSE: "COMPUTE_WH"
+        SF_DATABASE: "DB"
       run: |
         python << EOF
         import snowflake.connector
  
         conn = snowflake.connector.connect(
-            account='${{ secrets.SF_ACCOUNT }}',
-            user='${{ secrets.SF_USERNAME }}',
-            password='${{ secrets.SF_PASSWORD }}',
-            warehouse='${{ secrets.SF_WAREHOUSE }}'
+            account='"dj65498.central-india.azure",
+            user="nivethidhas",
+            password="Snowflake@2025",
+            warehouse="COMPUTE_WH"
         )
  
         cursor = conn.cursor()
@@ -103,19 +108,19 @@ jobs:
     - name: Clean Up Clone Database
       if: always()
       env:
-        SF_ACCOUNT: ${{ secrets.SF_ACCOUNT }}
-        SF_USERNAME: ${{ secrets.SF_USERNAME }}
-        SF_PASSWORD: ${{ secrets.SF_PASSWORD }}
-        SF_WAREHOUSE: ${{ secrets.SF_WAREHOUSE }}
+        SF_ACCOUNT: "dj65498.central-india.azure"
+        SF_USERNAME: "nivethidhas"
+        SF_PASSWORD: "Snowflake@2025"
+        SF_WAREHOUSE: "COMPUTE_WH"
       run: |
         python << EOF
         import snowflake.connector
  
         conn = snowflake.connector.connect(
-            account='${{ secrets.SF_ACCOUNT }}',
-            user='${{ secrets.SF_USERNAME }}',
-            password='${{ secrets.SF_PASSWORD }}',
-            warehouse='${{ secrets.SF_WAREHOUSE }}'
+            account="dj65498.central-india.azure",
+            user="nivethidhas",
+            password="Snowflake@2025",
+            warehouse="COMPUTE_WH"
         )
  
         cursor = conn.cursor()
