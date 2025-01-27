@@ -35,8 +35,8 @@ def restore_snowflake_db(backup_db, target_db, user, password, account, warehous
         clone_command = f"CREATE DATABASE {target_db} CLONE {backup_db};"
 		
 		# SQL command to create a table named secondtable
-        sql_command = f"USE SCHEMA DEMO;
-			\n CREATE TABLE SECONDTABLE(NAME VARCHAR , AGE NUMBER );"
+        sql_command = f"USE SCHEMA DEMO;"
+	table_command= f"CREATE TABLE SECONDTABLE(NAME VARCHAR , AGE NUMBER );"
         except Exception as e:
         print(f"Error during restore: {e}")
         sys.restore_command()
