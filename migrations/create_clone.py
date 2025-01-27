@@ -17,12 +17,12 @@ def restore_snowflake_db(backup_db, target_db, user, password, account, warehous
     try:
         # Establish Snowflake connection
         ctx = snowflake.connector.connect(
-            user=nivethidhas,
-            password=Snowflake@2025,
-            account=dj65498.central-india.azure,
-            warehouse=COMPUTE_WH,
-            database=DB,
-            schema=SCH
+            user="nivethidhas",
+            password="Snowflake@2025,
+            account="dj65498.central-india.azure",
+            warehouse="COMPUTE_WH",
+            database="DB",
+            schema="SCH"
         )
 
         # Create a cursor object to execute SQL commands
@@ -36,11 +36,7 @@ def restore_snowflake_db(backup_db, target_db, user, password, account, warehous
 		
 		# SQL command to create a table named secondtable
         sql_command = f"USE SCHEMA DEMO;
-						CREATE TABLE SECONDTABLE
-						(
-							NAME VARCHAR
-						   ,AGE NUMBER
-						);"
+			\n CREATE TABLE SECONDTABLE(NAME VARCHAR , AGE NUMBER );"
         except Exception as e:
         print(f"Error during restore: {e}")
         sys.restore_command()
