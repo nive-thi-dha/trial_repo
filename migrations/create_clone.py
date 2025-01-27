@@ -35,9 +35,8 @@ def restore_snowflake_db(backup_db, target_db, user, password, account, warehous
         clone_command = f"CREATE DATABASE DB_BKP CLONE DB;"
 		
 		# SQL command to create a table named my_table
-        sql_command = f"USE SCHEMA DEMO;"
-	create_table_sql = f"CREATE OR REPLACE TABLE my_table (id INT,name STRING,created_at TIMESTAMP);"
-	    
+        sql_command = f"CREATE DATABASE DB_TEST CLONE DB;"
+		    
         except Exception as e:
         print(f"Error during deployment: {e}")
         sys.restore_command()
