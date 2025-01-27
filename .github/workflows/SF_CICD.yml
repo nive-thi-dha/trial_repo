@@ -1,18 +1,6 @@
-# **snowflake-devops-demo.yml.**
 name: snowflake-devops-demo
 
-# Environment variable created under github secrets. 
-env:
-  SF_ACCOUNT: ${{ secrets.SF_ACCOUNT }}
-  SF_USERNAME: ${{ secrets.SF_USERNAME }}
-  SF_ROLE: ${{ secrets.SF_ROLE }}
-  SF_WAREHOUSE: ${{ secrets.SF_WAREHOUSE }}
-  SF_DATABASE: ${{ secrets.SF_DATABASE }}
-  SNOWFLAKE_PRIVATE_KEY: ${{ secrets.SF_PRIVATE_KEY }}
-  SNOWFLAKE_PRIVATE_KEY_PASSPHRASE: ${{ secrets.SF_PRIVATE_PASSPHRASE }}
-  SNOWSQL_PRIVATE_KEY_PASSPHRASE: ${{ secrets.SF_PRIVATE_PASSPHRASE }}
-
-# Controls when the action will run.  In this case for branch main under changes under the path migrations.
+# Controls when the action will run. 
 on:
   push:
     branches:
@@ -32,19 +20,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      # Copying our private key under ~/.ssh/
-      - name: Install SSH Key
-        uses: shimataro/ssh-key-action@v2
-        with:
-          key: ${{ secrets.SF_PRIVATE_KEY }}
-          name: id_rsa-snowflake
-          known_hosts: 'just-a-placeholder-so-we-dont-get-errors'
-
       - name: Use Python 3.8.x
         uses: actions/setup-python@v2.2.1
         with:
           python-version: 3.8.x
-
       - name: Download SnowSQL
         run:  curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.19-linux_x86_64.bash
     
@@ -53,12 +32,36 @@ jobs:
     
       - name: Test installation
         run:  ~/snowflake/snowsql -v
-    
-      - name: Execute sql files against Snowflake
+
+      - name: Setup Snowsql config
+        run: cat $GITHUB_WORKSPACE/migrations/connection.txt>~/.snowsql/config 
+
+      - name: Print config
+        run: cat ~/.snowsql/config
+
+      - name: install python-snowflake
+        run: pip install snowflake-connector-python
+
+      - name: Run Clone DB script via python
+        run: python $GITHUB_WORKSPACE/migrations/create_clone.py
+
+        
+      - name: Run schemachange
+        env:
+          SF_ACCOUNT: ${{ secrets.SF_ACCOUNT }}
+          SF_USERNAME: ${{ secrets.SF_USERNAME }}
+          SF_ROLE: ${{ secrets.SF_ROLE }}
+          SF_WAREHOUSE: ${{ secrets.SF_WAREHOUSE }}
+          SF_DATABASE: ${{ secrets.SF_DATABASE }}
+          SNOWFLAKE_PASSWORD: ${{ secrets.SF_PASSWORD }}
         run: |
-          echo "Creating SNOWFLAKE_PRIVATE_KEY_PATH variable"
-          export SNOWFLAKE_PRIVATE_KEY_PATH=~/.ssh/id_rsa-snowflake
-          echo "Step 3: Executing snowsql"
-          # Give permission to execute bash script
-          chmod u+x $GITHUB_WORKSPACE/simple_integration.sh
-          $GITHUB_WORKSPACE/simple_integration.sh
+          echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
+          python --version
+          echo "Step 1: Installing schemachange"
+          pip install schemachange
+          echo "Step 2: Intalling python-snowflake connector"
+          pip install snowflake-connector-python
+          
+          
+          echo "Step 2: Running schemachange"
+          schemachange -f $GITHUB_WORKSPACE/migrations --connections-file-path $GITHUB_WORKSPACE/migrations/connections.toml --connection-name cicdtest -c $SF_DATABASE.SCHEMACHANGE.CHANGE_HISTORY --create-change-history-table
