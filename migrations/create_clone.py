@@ -18,7 +18,7 @@ def restore_snowflake_db(backup_db, target_db, user, password, account, warehous
         # Establish Snowflake connection
         ctx = snowflake.connector.connect(
             user="nivethidhas",
-            password="Snowflake@2025,
+            password="Snowflake@2025",
             account="dj65498.central-india.azure",
             warehouse="COMPUTE_WH",
             database="DB",
