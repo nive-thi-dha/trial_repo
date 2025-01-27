@@ -1,5 +1,5 @@
 name: snowflake-devops-demo
-
+ 
 # Controls when the action will run. 
 on:
   push:
@@ -7,61 +7,131 @@ on:
       - main
     paths:
       - 'migrations/**'
-
+	  
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-
+ 
+ 
 jobs:
-  deploy-snowflake-changes-job:
+  schema-change:
     runs-on: ubuntu-latest
-
+ 
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Use Python 3.8.x
-        uses: actions/setup-python@v2.2.1
-        with:
-          python-version: 3.8.x
-      - name: Download SnowSQL
-        run:  curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.19-linux_x86_64.bash
-    
-      - name: Install SnowSQL
-        run: SNOWSQL_DEST=~/snowflake SNOWSQL_LOGIN_SHELL=~/.profile bash snowsql-1.2.19-linux_x86_64.bash
-    
-      - name: Test installation
-        run:  ~/snowflake/snowsql -v
-
-      - name: Setup Snowsql config
-        run: cat $GITHUB_WORKSPACE/migrations/connection.txt>~/.snowsql/config 
-
-      - name: Print config
-        run: cat ~/.snowsql/config
-
-      - name: install python-snowflake
-        run: pip install snowflake-connector-python
-
-      - name: Run Clone DB script via python
-        run: python $GITHUB_WORKSPACE/migrations/create_clone.py
-
-        
-      - name: Run schemachange
-        env:
-          SF_ACCOUNT: ${{ secrets.SF_ACCOUNT }}
-          SF_USERNAME: ${{ secrets.SF_USERNAME }}
-          SF_ROLE: ${{ secrets.SF_ROLE }}
-          SF_WAREHOUSE: ${{ secrets.SF_WAREHOUSE }}
-          SF_DATABASE: ${{ secrets.SF_DATABASE }}
-          SNOWFLAKE_PASSWORD: ${{ secrets.SF_PASSWORD }}
-        run: |
-          echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
-          python --version
-          echo "Step 1: Installing schemachange"
-          pip install schemachange
-          echo "Step 2: Intalling python-snowflake connector"
-          pip install snowflake-connector-python
-          
-          
-          echo "Step 2: Running schemachange"
-          schemachange -f $GITHUB_WORKSPACE/migrations --connections-file-path $GITHUB_WORKSPACE/migrations/connections.toml --connection-name cicd -c $SF_DATABASE.SCHEMACHANGE.CHANGE_HISTORY --create-change-history-table
+    - uses: actions/checkout@v3
+ 
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.9'
+ 
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install schemachange snowflake-connector-python
+ 
+    - name: Create DB Clone
+      env:
+        SF_ACCOUNT: ${{ secrets.SF_ACCOUNT }}
+        SF_USERNAME: ${{ secrets.SF_USERNAME }}
+        SF_PASSWORD: ${{ secrets.SF_PASSWORD }}
+        SF_WAREHOUSE: ${{ secrets.SF_WAREHOUSE }}
+        SF_DATABASE: ${{ secrets.SF_DATABASE }}
+      run: |
+        python << EOF
+        import snowflake.connector
+ 
+        conn = snowflake.connector.connect(
+            account='${{ secrets.SF_ACCOUNT }}',
+            user='${{ secrets.SF_USERNAME }}',
+            password='${{ secrets.SF_PASSWORD }}',
+            warehouse='${{ secrets.SF_WAREHOUSE }}',
+            database='${{ secrets.SF_DATABASE }}'
+        )
+ 
+        cursor = conn.cursor()
+        clone_db_name = '${{ secrets.SF_DATABASE }}_CLONE'
+        try:
+            cursor.execute(f'CREATE OR REPLACE DATABASE {clone_db_name} CLONE {conn.database}')
+            print(f'Successfully created clone database: {clone_db_name}')
+        except Exception as e:
+            print(f'Error creating clone: {e}')
+            raise
+        finally:
+            cursor.close()
+            conn.close()
+        EOF
+ 
+    - name: Apply Schema Changes
+      env:
+        SF_ACCOUNT: ${{ secrets.SF_ACCOUNT }}
+        SF_USERNAME: ${{ secrets.SF_USERNAME }}
+        SF_PASSWORD: ${{ secrets.SF_PASSWORD }}
+        SF_WAREHOUSE: ${{ secrets.SF_WAREHOUSE }}
+        SF_DATABASE: ${{ secrets.SF_DATABASE }}
+        SF_ROLE: ${{ secrets.SF_ROLE }}
+      run: |
+       schemachange -f $GITHUB_WORKSPACE/migrations --connections-file-path $GITHUB_WORKSPACE/migrations/connections.toml --connection-name cicd -c $SF_DATABASE.SCHEMACHANGE.CHANGE_HISTORY --create-change-history-table
+ 
+    - name: Rollback on Failure
+      if: failure()
+      env:
+        SF_ACCOUNT: ${{ secrets.SF_ACCOUNT }}
+        SF_USERNAME: ${{ secrets.SF_USERNAME }}
+        SF_PASSWORD: ${{ secrets.SF_PASSWORD }}
+        SF_WAREHOUSE: ${{ secrets.SF_WAREHOUSE }}
+        SF_DATABASE: ${{ secrets.SF_DATABASE }}
+      run: |
+        python << EOF
+        import snowflake.connector
+ 
+        conn = snowflake.connector.connect(
+            account='${{ secrets.SF_ACCOUNT }}',
+            user='${{ secrets.SF_USERNAME }}',
+            password='${{ secrets.SF_PASSWORD }}',
+            warehouse='${{ secrets.SF_WAREHOUSE }}'
+        )
+ 
+        cursor = conn.cursor()
+        clone_db_name = '${{ secrets.SF_DATABASE }}_CLONE'
+        prod_db_name = '${{ secrets.SF_DATABASE }}'
+        try:
+            cursor.execute(f'DROP DATABASE IF EXISTS {prod_db_name}')
+            cursor.execute(f'CREATE OR REPLACE DATABASE {prod_db_name} CLONE {clone_db_name}')
+            print('Rollback completed ')
+        except Exception as e:
+            print(f'Rollback failed: {e}')
+            raise
+        finally:
+            cursor.close()
+            conn.close()
+        EOF
+ 
+    - name: Clean Up Clone Database
+      if: always()
+      env:
+        SF_ACCOUNT: ${{ secrets.SF_ACCOUNT }}
+        SF_USERNAME: ${{ secrets.SF_USERNAME }}
+        SF_PASSWORD: ${{ secrets.SF_PASSWORD }}
+        SF_WAREHOUSE: ${{ secrets.SF_WAREHOUSE }}
+      run: |
+        python << EOF
+        import snowflake.connector
+ 
+        conn = snowflake.connector.connect(
+            account='${{ secrets.SF_ACCOUNT }}',
+            user='${{ secrets.SF_USERNAME }}',
+            password='${{ secrets.SF_PASSWORD }}',
+            warehouse='${{ secrets.SF_WAREHOUSE }}'
+        )
+ 
+        cursor = conn.cursor()
+        clone_db_name = '${{ secrets.SF_DATABASE }}_CLONE'
+        try:
+            cursor.execute(f'DROP DATABASE IF EXISTS {clone_db_name}')
+            print('Clone database deleted successfully')
+        except Exception as e:
+            print(f'Error deleting clone database: {e}')
+        finally:
+            cursor.close()
+            conn.close()
+        EOF
