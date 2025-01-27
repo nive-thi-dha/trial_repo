@@ -8,5 +8,5 @@ CREATE TABLE STG_CLIENT
     CustomerKey INT NOT NULL,
     StoreKey INT NOT NULL,
     SalesAmount DECIMAL(10, 2) NOT NULL,
-    Quantity INT NOT NULL,
+    Quantity INT NOT NULL
 );
