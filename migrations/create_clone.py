@@ -29,20 +29,20 @@ def restore_snowflake_db(backup_db, target_db, user, password, account, warehous
         cursor = ctx.cursor()
 		
 	# SQL command to note down the timestamp
-        timestamp_command = f"select current_timestamp();"
+        timestamp_command = f"select current_timestamp()"
 	cursor.execute(timestamp_command)
 		
 	# SQL command to create a clone of the database
-        clone_command = f"CREATE DATABASE DB_BKP CLONE DB;"
+        clone_command = f"CREATE DATABASE DB_BKP CLONE DB"
 	cursor.execute(clone_command)
 		
 	# SQL command to test
-        sql_command = f"CREATE DATABASE DB_TEST CLONE DB;"
+        sql_command = f"CREATE DATABASE DB_TEST CLONE DB"
 	cursor.execute(sql_command)
 		
 	# SQL command to restore the database from cloned database in case of any failure
 	drop_command= f"DROP DATABASE DB;"
-        restore_command = f"CREATE DATABASE DB CLONE DB_BKP AT (TIMESTAMP => {timestamp_command});"
+        restore_command = f"CREATE DATABASE DB CLONE DB_BKP AT (TIMESTAMP => {timestamp_command})"
 		
         except Exception as e:
         print(f"Error during restore: {e}")
