@@ -1,0 +1,51 @@
+name: Liquibase Migration
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  database-migration:
+    runs-on: ubuntu-latest
+   
+    steps:
+    - uses: actions/checkout@v3
+   
+    - name: Set up JDK
+      uses: actions/setup-java@v2
+      with:
+        java-version: '11'
+        distribution: 'adopt'
+   
+    - name: Setup Liquibase
+      run: |
+        wget https://github.com/liquibase/liquibase/releases/download/v4.20.0/liquibase-4.20.0.tar.gz
+        tar xzf liquibase-4.20.0.tar.gz
+        chmod +x liquibase
+        mkdir -p lib/
+        wget https://repo1.maven.org/maven2/net/snowflake/snowflake-jdbc/3.13.30/snowflake-jdbc-3.13.30.jar -O lib/snowflake-jdbc.jar
+
+    - name: Create Liquibase Properties
+      run: |
+        cat > liquibase.properties << EOF
+        driver: net.snowflake.client.jdbc.SnowflakeDriver
+        url: jdbc:snowflake://${{ secrets.SF_ACCOUNT }}.snowflakecomputing.com/?db=${{ secrets.SF_DATABASE }}&schema=${{ secrets.SF_SCHEMA }}&warehouse=${{ secrets.SF_WAREHOUSE }}
+        username: ${{ secrets.SF_USERNAME }}
+        password: ${{ secrets.SF_PASSWORD }}
+        changeLogFile: changelog/db.changelog-master.xml
+        EOF
+       
+        # Verify properties
+        cat liquibase.properties | grep -v password
+
+    - name: Run Liquibase Status
+      run: ./liquibase status --verbose --log-level=debug
+
+    - name: Validate Liquibase Changelog
+      run: ./liquibase validate
+
+    - name: Apply Database Changes
+      run: ./liquibase update
